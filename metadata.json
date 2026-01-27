@@ -1,0 +1,7 @@
+{
+  "name": "Fig & Fruitbat Tracker",
+  "description": "Monitor your fig tree's ecosystem by tracking fruit ripeness, foliage density, and visiting fruitbats. Get AI-powered seasonal trend analysis based on your location.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
