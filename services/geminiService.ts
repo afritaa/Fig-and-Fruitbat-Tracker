@@ -12,6 +12,7 @@ export const analyzeTrends = async (
   weatherData?: { date: string; temp: number; rainfall: number }[];
   correlations?: CorrelationHighlight[];
 }> => {
+  // Always create a new instance right before use to ensure the latest API key is used
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   let locationString = "Unknown Location";
@@ -102,8 +103,9 @@ export const analyzeTrends = async (
     const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
 
     return { text: cleanText, prediction, sources, weatherData, correlations };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini Analysis Error:", error);
+    // Rethrow to allow component-level handling (e.g., triggering key picker)
     throw error;
   }
 };

@@ -13,6 +13,7 @@ import { analyzeTrends } from './services/geminiService';
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'observation' | 'analysis'>('observation');
   const [observations, setObservations] = useState<Observation[]>([]);
+  const [hasKey, setHasKey] = useState(true);
   
   // Default location: Woombye, QLD 4559
   const [location, setLocation] = useState<LocationData | null>({
@@ -43,6 +44,14 @@ const App: React.FC = () => {
   const logContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const checkKey = async () => {
+      if (window.aistudio?.hasSelectedApiKey) {
+        const selected = await window.aistudio.hasSelectedApiKey();
+        setHasKey(selected);
+      }
+    };
+    checkKey();
+
     const saved = localStorage.getItem('fig_observations');
     if (saved) setObservations(JSON.parse(saved));
     
@@ -56,7 +65,6 @@ const App: React.FC = () => {
         setPostcode(parsedLoc.postcode || '4559');
       }
     } else {
-      // If no location saved, initialize storage with the default Woombye location
       localStorage.setItem('fig_location', JSON.stringify({
         suburb: 'Woombye',
         state: 'QLD',
@@ -68,6 +76,13 @@ const App: React.FC = () => {
     const savedPrediction = localStorage.getItem('fig_prediction');
     if (savedPrediction) setPrediction(JSON.parse(savedPrediction));
   }, []);
+
+  const handleOpenKeyPicker = async () => {
+    if (window.aistudio?.openSelectKey) {
+      await window.aistudio.openSelectKey();
+      setHasKey(true); // Assume success per guidelines
+    }
+  };
 
   useEffect(() => {
     if (activeTab === 'observation' && isLogExpanded && logContainerRef.current) {
@@ -114,7 +129,6 @@ const App: React.FC = () => {
         localStorage.setItem('fig_prediction', JSON.stringify(result.prediction));
       }
 
-      // Merge weather data into observations if provided
       if (result.weatherData && result.weatherData.length > 0) {
         setObservations(prev => {
           const updated = prev.map(obs => {
@@ -125,8 +139,11 @@ const App: React.FC = () => {
           return updated;
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Auto-analysis failed", err);
+      if (err.message?.includes("Requested entity was not found")) {
+        handleOpenKeyPicker();
+      }
     } finally {
       setIsAnalyzing(false);
     }
@@ -213,7 +230,16 @@ const App: React.FC = () => {
             </div>
           </div>
           
-          <div className="relative">
+          <div className="flex items-center gap-2 relative">
+            {!hasKey && (
+              <button 
+                onClick={handleOpenKeyPicker}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-amber-500 text-white shadow-md hover:bg-amber-600 transition-all animate-pulse"
+              >
+                🗝️ Setup Key
+              </button>
+            )}
+            
             <button 
               onClick={() => setShowLocationForm(!showLocationForm)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${
@@ -227,7 +253,7 @@ const App: React.FC = () => {
             </button>
 
             {showLocationForm && (
-              <div className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-slate-100 p-5 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="absolute right-0 top-12 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-slate-100 p-5 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                 <h3 className="font-bold text-slate-800 mb-4 text-xs uppercase tracking-widest">Site Location</h3>
                 <button onClick={requestGeolocation} disabled={locationLoading} className="w-full mb-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-lg border border-slate-200 transition-all flex items-center justify-center gap-2">
                   {locationLoading ? 'Syncing...' : 'Use Current GPS'}
