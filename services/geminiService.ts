@@ -51,9 +51,9 @@ export const analyzeTrends = async (
         "reasoning": "A concise explanation of the forecast",
         "influencers": [
           {
-            "label": "Brief Factor Name (e.g., Temperature)",
+            "label": "Short Title (e.g. Rainfall)",
             "impact": "positive" | "negative" | "neutral",
-            "description": "Specific detail about how this factor influenced the tree"
+            "description": "Short explanation (e.g. Recent 20mm rain boosted fruit size)"
           }
         ]
       },
@@ -64,6 +64,8 @@ export const analyzeTrends = async (
         {"startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD", "type": "positive/negative", "description": "Short label"}
       ]
     }
+    
+    IMPORTANT: You must provide exactly 3 influencers in the influencers array to fill the UI layout.
   `;
 
   try {
