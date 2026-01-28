@@ -10,6 +10,7 @@ interface TrendAnalysisProps {
   prediction: FruitingPrediction | null;
   sources: any[];
   loading: boolean;
+  error?: string | null;
 }
 
 const TrendAnalysis: React.FC<TrendAnalysisProps> = ({ 
@@ -17,7 +18,8 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
   onAnalyze, 
   analysisText, 
   sources, 
-  loading 
+  loading,
+  error
 }) => {
   const isDataInsufficient = observations.length < 3;
 
@@ -30,17 +32,32 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
           </h3>
           <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Weather-Synced Phenology</p>
         </div>
-        {!loading && analysisText && (
+        {!loading && (analysisText || error) && (
            <button
            onClick={onAnalyze}
-           className="p-2 rounded-xl bg-slate-50 text-indigo-600 border border-slate-200"
+           className="p-2 rounded-xl bg-slate-50 text-indigo-600 border border-slate-200 hover:bg-indigo-50 transition-colors"
+           title="Re-run analysis"
          >
            🔄
          </button>
         )}
       </div>
 
-      {isDataInsufficient && (
+      {error && (
+        <div className="bg-rose-50 border border-rose-100 p-5 rounded-2xl mb-6">
+          <p className="text-rose-800 font-bold text-xs uppercase tracking-widest mb-2 flex items-center gap-2">
+            <span>⚠️</span> Configuration Error
+          </p>
+          <p className="text-rose-600 text-sm font-medium leading-relaxed">
+            {error}
+          </p>
+          <p className="text-rose-400 text-[10px] font-bold mt-2 uppercase tracking-tighter">
+            Tip: Ensure your API_KEY is set in Netlify Environment Variables.
+          </p>
+        </div>
+      )}
+
+      {isDataInsufficient && !error && (
         <div className="bg-slate-50 p-10 rounded-2xl border-2 border-dashed border-slate-200 text-center">
           <p className="text-slate-500 font-bold text-sm">
             AI analysis requires 3+ observations to establish a baseline.
@@ -58,7 +75,7 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
         </div>
       )}
 
-      {analysisText && (
+      {analysisText && !loading && !error && (
         <div className="space-y-6">
           <div className="prose prose-sm max-w-none text-slate-600 font-medium leading-relaxed">
             {analysisText.split('\n').map((line, i) => {
@@ -98,7 +115,7 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
         </div>
       )}
 
-      {!analysisText && !loading && !isDataInsufficient && (
+      {!analysisText && !loading && !isDataInsufficient && !error && (
         <div className="text-center py-16 bg-indigo-50/20 rounded-2xl border border-indigo-100/50">
           <div className="text-5xl mb-4">🌍</div>
           <h4 className="text-slate-900 font-black text-lg">Report Ready</h4>

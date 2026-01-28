@@ -4,26 +4,42 @@ import { GoogleGenAI } from "@google/genai";
 export const handler = async (event: any) => {
   // Only allow POST requests
   if (event.httpMethod !== "POST") {
-    return { statusCode: 405, body: "Method Not Allowed" };
+    return { 
+      statusCode: 405, 
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: "Method Not Allowed" }) 
+    };
   }
 
   try {
-    const { observations, location } = JSON.parse(event.body);
+    const { observations, location } = JSON.parse(event.body || "{}");
     const apiKey = process.env.API_KEY;
 
     if (!apiKey) {
+      console.error("CRITICAL: API_KEY environment variable is missing in Netlify.");
       return {
         statusCode: 500,
-        body: JSON.stringify({ error: "API_KEY not configured in Netlify environment variables." }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          error: "Server configuration error: The Gemini API Key is missing. Please add API_KEY to your Netlify Environment Variables." 
+        }),
+      };
+    }
+
+    if (!observations || !Array.isArray(observations) || observations.length < 3) {
+      return {
+        statusCode: 400,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "Insufficient data. Need at least 3 observations." }),
       };
     }
 
     const ai = new GoogleGenAI({ apiKey });
     
-    let locationString = "Unknown Location";
+    let locationString = "Woombye, QLD, Australia";
     if (location) {
       if (location.isManual) {
-        locationString = `${location.suburb}, ${location.state}, ${location.postcode}, Australia`;
+        locationString = `${location.suburb || ''}, ${location.state || ''}, ${location.postcode || ''}, Australia`.replace(/^, /, '');
       } else if (location.latitude && location.longitude) {
         locationString = `Latitude: ${location.latitude}, Longitude: ${location.longitude}`;
       }
@@ -31,7 +47,7 @@ export const handler = async (event: any) => {
 
     const dataSummary = observations
       .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .map((o: any) => `Date: ${o.date}, Bats: ${o.bats}, Figs Dropped: ${o.figsDropped}, Leaves Dropped: ${o.leavesDropped}`)
+      .map((o: any) => `Date: ${o.date}, Bats: ${o.bats}%, Figs Dropped: ${o.figsDropped}%, Leaves Dropped: ${o.leavesDropped}%`)
       .join("\n");
 
     const prompt = `
@@ -71,7 +87,7 @@ export const handler = async (event: any) => {
         ]
       }
       
-      IMPORTANT: You must provide exactly 3 influencers in the influencers array to fill the UI layout.
+      IMPORTANT: You must provide exactly 3 influencers in the influencers array.
     `;
 
     const response = await ai.models.generateContent({
@@ -84,17 +100,21 @@ export const handler = async (event: any) => {
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*" 
+      },
       body: JSON.stringify({
         text: response.text,
         groundingMetadata: response.candidates?.[0]?.groundingMetadata,
       }),
     };
   } catch (error: any) {
-    console.error("Function Error:", error);
+    console.error("Netlify Function Error:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ error: error.message || "Internal server error during analysis." }),
     };
   }
 };

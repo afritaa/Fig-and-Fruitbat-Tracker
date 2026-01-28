@@ -13,7 +13,6 @@ import { analyzeTrends } from './services/geminiService';
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'observation' | 'analysis'>('observation');
   const [observations, setObservations] = useState<Observation[]>([]);
-  const [hasKey, setHasKey] = useState(true);
   
   // Default location: Woombye, QLD 4559
   const [location, setLocation] = useState<LocationData | null>({
@@ -34,6 +33,7 @@ const App: React.FC = () => {
   const [correlations, setCorrelations] = useState<CorrelationHighlight[]>([]);
   const [sources, setSources] = useState<any[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   // Manual location form state
   const [suburb, setSuburb] = useState('Woombye');
@@ -44,14 +44,6 @@ const App: React.FC = () => {
   const logContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const checkKey = async () => {
-      if (window.aistudio?.hasSelectedApiKey) {
-        const selected = await window.aistudio.hasSelectedApiKey();
-        setHasKey(selected);
-      }
-    };
-    checkKey();
-
     const saved = localStorage.getItem('fig_observations');
     if (saved) setObservations(JSON.parse(saved));
     
@@ -64,25 +56,11 @@ const App: React.FC = () => {
         setState(parsedLoc.state || 'QLD');
         setPostcode(parsedLoc.postcode || '4559');
       }
-    } else {
-      localStorage.setItem('fig_location', JSON.stringify({
-        suburb: 'Woombye',
-        state: 'QLD',
-        postcode: '4559',
-        isManual: true
-      }));
     }
 
     const savedPrediction = localStorage.getItem('fig_prediction');
     if (savedPrediction) setPrediction(JSON.parse(savedPrediction));
   }, []);
-
-  const handleOpenKeyPicker = async () => {
-    if (window.aistudio?.openSelectKey) {
-      await window.aistudio.openSelectKey();
-      setHasKey(true); // Assume success per guidelines
-    }
-  };
 
   useEffect(() => {
     if (activeTab === 'observation' && isLogExpanded && logContainerRef.current) {
@@ -101,11 +79,12 @@ const App: React.FC = () => {
   }, [isLogExpanded, activeTab]);
 
   useEffect(() => {
+    // Auto-run analysis when data changes
     if (observations.length >= 3 && location) {
       if (analysisTimer.current) clearTimeout(analysisTimer.current);
       analysisTimer.current = setTimeout(() => {
         handleRunAnalysis();
-      }, 3000); 
+      }, 5000); 
     }
     return () => {
       if (analysisTimer.current) clearTimeout(analysisTimer.current);
@@ -118,6 +97,7 @@ const App: React.FC = () => {
 
   const handleRunAnalysis = async () => {
     setIsAnalyzing(true);
+    setAnalysisError(null);
     try {
       const result = await analyzeTrends(observations, location);
       setAnalysisText(result.text);
@@ -140,10 +120,8 @@ const App: React.FC = () => {
         });
       }
     } catch (err: any) {
-      console.error("Auto-analysis failed", err);
-      if (err.message?.includes("Requested entity was not found")) {
-        handleOpenKeyPicker();
-      }
+      console.error("Analysis failed", err);
+      setAnalysisError(err.message || "An unexpected error occurred during analysis.");
     } finally {
       setIsAnalyzing(false);
     }
@@ -231,15 +209,6 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-2 relative">
-            {!hasKey && (
-              <button 
-                onClick={handleOpenKeyPicker}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest bg-amber-500 text-white shadow-md hover:bg-amber-600 transition-all animate-pulse"
-              >
-                🗝️ Setup Key
-              </button>
-            )}
-            
             <button 
               onClick={() => setShowLocationForm(!showLocationForm)}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${
@@ -296,7 +265,9 @@ const App: React.FC = () => {
               {isLogExpanded && (
                 <div className="px-5 pb-5">
                   <div ref={logContainerRef} className="space-y-2 max-h-[500px] overflow-y-auto pr-1 custom-scrollbar">
-                    {observations.map(obs => (
+                    {observations.length === 0 ? (
+                      <p className="py-10 text-center text-slate-400 text-xs font-bold italic">No observations logged yet.</p>
+                    ) : observations.map(obs => (
                       <div 
                         key={obs.id} 
                         id={`log-item-${obs.date}`}
@@ -338,6 +309,7 @@ const App: React.FC = () => {
               prediction={prediction}
               sources={sources}
               loading={isAnalyzing}
+              error={analysisError}
             />
           </div>
         )}
