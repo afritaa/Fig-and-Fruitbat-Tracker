@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Observation } from '../types';
+import { Observation } from '../types.ts';
 
 interface ObservationFormProps {
   onAdd: (obs: Omit<Observation, 'id'>) => void;
@@ -8,7 +8,6 @@ interface ObservationFormProps {
 }
 
 const ObservationForm: React.FC<ObservationFormProps> = ({ onAdd, existingObservations }) => {
-  // Helper to get local YYYY-MM-DD
   const getLocalDateString = () => {
     const now = new Date();
     const year = now.getFullYear();
@@ -23,7 +22,6 @@ const ObservationForm: React.FC<ObservationFormProps> = ({ onAdd, existingObserv
   const [leavesDropped, setLeavesDropped] = useState(0);
   const [isMinimized, setIsMinimized] = useState(false);
 
-  // Sync sliders with existing data when date changes
   useEffect(() => {
     const existing = existingObservations.find(o => o.date === date);
     if (existing) {
