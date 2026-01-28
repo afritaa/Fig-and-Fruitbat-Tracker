@@ -12,6 +12,7 @@
         body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
         #root { min-height: 100vh; }
         .recharts-responsive-container { min-height: 300px; }
+        /* Custom scrollbar for better aesthetics */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f8fafc; }
         ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
@@ -24,15 +25,16 @@
     "react/": "https://esm.sh/react@19.0.0/",
     "react-dom": "https://esm.sh/react-dom@19.0.0",
     "react-dom/": "https://esm.sh/react-dom@19.0.0/",
-    "recharts": "https://esm.sh/recharts@2.15.0?bundle&external=react,react-dom",
+    "recharts": "https://esm.sh/recharts@2.15.0?external=react,react-dom",
     "@google/genai": "https://esm.sh/@google/genai@1.38.0",
-    "date-fns": "https://esm.sh/date-fns@4.1.0?bundle"
+    "date-fns": "https://esm.sh/date-fns@4.1.0"
   }
 }
 </script>
 </head>
 <body class="bg-slate-50 text-slate-900">
     <div id="root"></div>
-    <script type="text/babel" data-presets="react,typescript" data-type="module" src="index.tsx"></script>
+    <!-- Babel handles transpilation of TSX directly in the browser -->
+    <script type="text/babel" data-type="module" src="index.tsx"></script>
 </body>
 </html>

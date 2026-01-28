@@ -3,7 +3,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { 
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line, ResponsiveContainer, ReferenceArea
 } from 'recharts';
-import { Observation, CorrelationHighlight } from '../types.ts';
+import { Observation, CorrelationHighlight } from '../types';
 import { format, parseISO, getYear, isValid, startOfYear, endOfYear, eachMonthOfInterval } from 'date-fns';
 
 interface DashboardProps {
@@ -16,6 +16,7 @@ const Dashboard: React.FC<DashboardProps> = ({ observations, highlights = [] }) 
 
   useEffect(() => {
     setMounted(true);
+    // Re-trigger resize to ensure Recharts correctly calculates container dimensions
     const timer = setTimeout(() => window.dispatchEvent(new Event('resize')), 500);
     return () => clearTimeout(timer);
   }, []);
@@ -33,6 +34,7 @@ const Dashboard: React.FC<DashboardProps> = ({ observations, highlights = [] }) 
 
   const [selectedYear, setSelectedYear] = useState<number>(availableYears[0]);
 
+  // Ensure selectedYear is valid when availableYears changes
   useEffect(() => {
     if (!availableYears.includes(selectedYear)) {
       setSelectedYear(availableYears[0]);
@@ -69,6 +71,7 @@ const Dashboard: React.FC<DashboardProps> = ({ observations, highlights = [] }) 
       }))
       .sort((a, b) => a.timestamp - b.timestamp);
 
+    // If no data, provide empty points at boundaries to show the year
     if (data.length === 0) {
       return [
         { timestamp: domain[0], bats: null, figsDropped: null, temp: null, rainfall: null },
@@ -189,6 +192,23 @@ const Dashboard: React.FC<DashboardProps> = ({ observations, highlights = [] }) 
           </LineChart>
         </ResponsiveContainer>
       </div>
+      
+      {highlights.length > 0 && (
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {highlights.map((h, i) => (
+            <div key={i} className={`p-4 rounded-2xl border ${h.type === 'positive' ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs">{h.type === 'positive' ? '📈' : '📉'}</span>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Anomaly Detected</p>
+              </div>
+              <p className="text-xs font-bold text-slate-800">{h.description}</p>
+              <p className="text-[9px] text-slate-400 font-medium mt-1">
+                {format(parseISO(h.startDate), 'MMM d')} - {format(parseISO(h.endDate), 'MMM d')}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

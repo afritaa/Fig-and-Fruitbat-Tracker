@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Observation } from '../types.ts';
+import { Observation } from '../types';
 
 interface EditObservationModalProps {
   observation: Observation;

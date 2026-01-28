@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Observation, LocationData, FruitingPrediction } from '../types.ts';
+import { Observation, LocationData, FruitingPrediction } from '../types';
 
 interface TrendAnalysisProps {
   observations: Observation[];
@@ -119,6 +119,9 @@ const TrendAnalysis: React.FC<TrendAnalysisProps> = ({
         <div className="text-center py-16 bg-indigo-50/20 rounded-2xl border border-indigo-100/50">
           <div className="text-5xl mb-4">🌍</div>
           <h4 className="text-slate-900 font-black text-lg">Report Ready</h4>
+          <p className="text-slate-500 text-xs font-medium max-w-xs mx-auto mt-2">
+            The AI is primed with your local weather patterns. Click below to generate the full ecological assessment.
+          </p>
           <button
             onClick={onAnalyze}
             className="mt-6 px-8 py-2.5 bg-indigo-600 text-white font-black rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all text-xs uppercase tracking-widest"
