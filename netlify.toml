@@ -2,11 +2,13 @@
 [build]
   functions = "netlify/functions"
 
+# Ensure Netlify Functions are handled first
 [[redirects]]
-  from = "/.netlify/*"
-  to = "/.netlify/:splat"
+  from = "/.netlify/functions/*"
+  to = "/.netlify/functions/:splat"
   status = 200
 
+# Fallback for SPA routing, but only if the file doesn't exist
 [[redirects]]
   from = "/*"
   to = "/index.html"
