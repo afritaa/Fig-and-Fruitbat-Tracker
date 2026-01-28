@@ -1,5 +1,5 @@
 
-import { Observation, LocationData, FruitingPrediction, CorrelationHighlight } from "../types.ts";
+import { Observation, LocationData, FruitingPrediction, CorrelationHighlight } from "../types";
 
 export const analyzeTrends = async (
   observations: Observation[],
