@@ -1,20 +1,19 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Observation, LocationData, FruitingPrediction, CorrelationHighlight } from './types';
-import ObservationForm from './components/ObservationForm';
-import TrendAnalysis from './components/TrendAnalysis';
-import SpreadsheetUpload from './components/SpreadsheetUpload';
-import EditObservationModal from './components/EditObservationModal';
-import FruitingPredictor from './components/FruitingPredictor';
-import HeadlineBanner from './components/HeadlineBanner';
-import Dashboard from './components/Dashboard';
-import { analyzeTrends } from './services/geminiService';
+import { Observation, LocationData, FruitingPrediction, CorrelationHighlight } from './types.ts';
+import ObservationForm from './components/ObservationForm.tsx';
+import TrendAnalysis from './components/TrendAnalysis.tsx';
+import SpreadsheetUpload from './components/SpreadsheetUpload.tsx';
+import EditObservationModal from './components/EditObservationModal.tsx';
+import FruitingPredictor from './components/FruitingPredictor.tsx';
+import HeadlineBanner from './components/HeadlineBanner.tsx';
+import Dashboard from './components/Dashboard.tsx';
+import { analyzeTrends } from './services/geminiService.ts';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'observation' | 'analysis'>('observation');
   const [observations, setObservations] = useState<Observation[]>([]);
   
-  // Default location: Woombye, QLD 4559
   const [location, setLocation] = useState<LocationData | null>({
     suburb: 'Woombye',
     state: 'QLD',
@@ -27,7 +26,6 @@ const App: React.FC = () => {
   const [showLocationForm, setShowLocationForm] = useState(false);
   const [isLogExpanded, setIsLogExpanded] = useState(true);
   
-  // AI States
   const [analysisText, setAnalysisText] = useState<string | null>(null);
   const [prediction, setPrediction] = useState<FruitingPrediction | null>(null);
   const [correlations, setCorrelations] = useState<CorrelationHighlight[]>([]);
@@ -35,7 +33,6 @@ const App: React.FC = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
-  // Manual location form state
   const [suburb, setSuburb] = useState('Woombye');
   const [state, setState] = useState('QLD');
   const [postcode, setPostcode] = useState('4559');
@@ -79,7 +76,6 @@ const App: React.FC = () => {
   }, [isLogExpanded, activeTab]);
 
   useEffect(() => {
-    // Auto-run analysis when data changes
     if (observations.length >= 3 && location) {
       if (analysisTimer.current) clearTimeout(analysisTimer.current);
       analysisTimer.current = setTimeout(() => {

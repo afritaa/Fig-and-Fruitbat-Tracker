@@ -1,5 +1,5 @@
 
-import { Observation, LocationData, FruitingPrediction, CorrelationHighlight } from "../types";
+import { Observation, LocationData, FruitingPrediction, CorrelationHighlight } from "../types.ts";
 
 export const analyzeTrends = async (
   observations: Observation[],
@@ -17,6 +17,14 @@ export const analyzeTrends = async (
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ observations, location }),
     });
+
+    // Check content type before parsing as JSON
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const text = await response.text();
+      console.error("Server returned non-JSON response:", text);
+      throw new Error(`Server Error: Received HTML instead of JSON. Ensure the Netlify function is deployed and API_KEY is set.`);
+    }
 
     if (!response.ok) {
       const errData = await response.json();
